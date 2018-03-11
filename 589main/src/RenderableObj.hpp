@@ -4,5 +4,5 @@
 #include "generalHeader.h"
 
 class RenderableObj{
-      
-}
+};
+#endif

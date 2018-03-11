@@ -2,6 +2,7 @@
 #include "VertexArray.hpp"
 #include "Program.hpp"
 #include "RenderableObj.hpp"
+#include "Server.cpp"
 #ifdef MACOS
 #define windowI  2
 #else
@@ -14,7 +15,7 @@
 // window
 GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
 int windowWidth = 600;
-int windowHeight =800;
+int windowHeight =400;
 // camera atrr
 // lookAt
 vec3 eye = vec3(0,0,1);
@@ -43,7 +44,7 @@ float ylastoffset;
 //
 bool printInf = false;
 //
-vector<renderableObj> objList;
+vector<RenderableObj> objList;
 
 // // time related attri
 // steady_clock::time_point t1;
@@ -119,8 +120,10 @@ int main(int argc, char *argv[]){
 		if(printInf){
 			cout << "INFO:\t " ;
 			// add here
+			cout << camera_distance << "  "
+				<< angleupdown<<" "
+				<< anglleftright<<" "<<endl;
 			cout << "\n" ;
-			}
 			printInf = false;
 		}
 		// update window
@@ -164,7 +167,15 @@ int main(int argc, char *argv[]){
 		v.push_back(vec3(0,0,0));
 		VertexArray va(6);
 		va.addBuffer("axis", 0, v);
-
+		glUseProgram(program.id);
+		glBindVertexArray(va.id);
+		glUniform3f(colorId, 0.8, 0.0, 0.0);
+		glDrawArrays(GL_LINE_STRIP, 0, 2);
+		glUniform3f(colorId, 0.0, 0.8, 0.0);
+		glDrawArrays(GL_LINE_STRIP, 2, 2);
+		glUniform3f(colorId, 0.0, 0.0, 0.8);
+		glDrawArrays(GL_LINE_STRIP, 4, 2);
+		glBindVertexArray(0);
 		CheckGLErrors();
 
 		// Swap buffers
@@ -202,7 +213,7 @@ void renderPoints(Program &program, VertexArray &va, int pointsize) {
 void renderLines(Program &program, VertexArray &va) {
 	glUseProgram(program.id);
 	glBindVertexArray(va.id);
-	glDrawArrays(GL_LINES, 0, va.count);
+	glDrawArrays(GL_LINE_STRIP, 0, va.count);
 	glBindVertexArray(0);
 	CheckGLErrors();
 }
@@ -224,15 +235,15 @@ void CheckGLErrors(){
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 	// control
-	if (key == GLFW_KEY_SHIFT && action == GLFW_PRESS) shiftPressed = true;
-	if (key == GLFW_KEY_SHIFT && action == GLFW_RELEASE) shiftPressed = false;
+	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) shiftPressed = true;
+	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) shiftPressed = false;
 	// // print info
 	if (key == GLFW_KEY_P && (action == GLFW_PRESS || action == GLFW_REPEAT)) printInf = true;
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera_distance -= yoffset;
-	if (camera_distance<0.1) camera_distance = 0.1;
+	if (camera_distance<0.2) camera_distance = 0.2;
 }
 
 void mouse_callback(GLFWwindow* window, int button, int action, int mods)
