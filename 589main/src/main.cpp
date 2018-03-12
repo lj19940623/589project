@@ -45,16 +45,31 @@ float ylastoffset;
 bool printInf = false;
 //
 vector<RenderableObj> objList;
+vector<vec3> tempPoints;
+vector<vector<vec3>> stack;
 
 // // time related attri
 // steady_clock::time_point t1;
 // steady_clock::time_point t2;
 
+	// key 1 to shift between 1 time point getter and constant time interval pointer getter
+	// key space to start/stop point getter save data to temp
+	// key s to save temp to stack
+	// key tab to toggle different obj
+	// key n to pop stack to make obj
+#define getterModMax  1
+int getterMod = 0;
+bool spaceRelease = false;
+bool spacePressed = false;
+bool SaveToStack = false;
+#define objTypeMax 1
+int TabToToggleObjType = 0;
+bool makeNewObj = false;
 
 //------------------
 // function shortcut
 //------------------
-void render(Program &program, VertexArray &va);
+void render(GLenum pri, Program &program, VertexArray &va);
 void renderPoints(Program &program, VertexArray &va, int pointsize);
 void renderLines(Program &program, VertexArray &va);
 
@@ -114,9 +129,25 @@ int main(int argc, char *argv[]){
 	Server sv(2225);
 	sv.start();
 	cout <<"server started, please open ios app with proper ip target!\n";
+	RenderableObj xaxis(GL_LINES);
+	xaxis.v.push_back(vec3(1,0,0));
+	xaxis.v.push_back(vec3(0,0,0));
+	xaxis.color = vec3(0.9,0.0,0.0);
+	objList.push_back(xaxis);
+	RenderableObj yaxis(GL_LINES);
+	yaxis.v.push_back(vec3(0,1,0));
+	yaxis.v.push_back(vec3(0,0,0));
+	yaxis.color = vec3(0.0,0.9,0.0);
+	objList.push_back(yaxis);
+	RenderableObj zaxis(GL_LINES);
+	zaxis.v.push_back(vec3(0,0,1));
+	zaxis.v.push_back(vec3(0,0,0));
+	zaxis.color = vec3(0.0,0.0,0.9);
+	objList.push_back(zaxis);
 
 	cout << "start of while loop rendering"<<endl;
 	while(!glfwWindowShouldClose(window)){
+		// print info
 		if(printInf){
 			cout << "INFO:\t " ;
 			// add here
@@ -126,6 +157,47 @@ int main(int argc, char *argv[]){
 			cout << "\n" ;
 			printInf = false;
 		}
+		// getterMod == 0 => single point mode
+		// getterMod == 1 => constant time interval to get point mode
+		// save getter data to temp
+		if(getterMod==0){
+			spacePressed = false;
+			if(spaceRelease){
+				spaceRelease=false;
+				tempPoints.push_back(sv.get3DCoor());
+			}
+		}else if(getterMod==1){
+			if(spaceRelease){
+				spacePressed = false;
+				spaceRelease = false;
+			}
+			if(spacePressed){
+				tempPoints.push_back(sv.get3DCoor());
+			}
+		}
+		// save temp data to stack
+		if(SaveToStack){
+			stack.push_back(tempPoints);
+			tempPoints.clear();
+		}
+		// save stack data to obj list
+		if(makeNewObj){
+			makeNewObj = false;
+			if(TabToToggleObjType==0 && stack.size()>=1){
+				RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
+				objList.push_back(tempObj);
+				stack.pop_back();
+			}
+			// if()
+		}
+
+		// #define getterModMax  1
+		// int getterMod = 0;
+		// bool spaceRelease = false;
+		// bool SaveToStack = false;
+		// #define objTypeMax 1
+		// int TabToToggleObjType = 0;
+		// bool makeNewObj = false;
 		// update window
 		glUseProgram(program.id);
 		// get window size and reset viewport
@@ -158,24 +230,12 @@ int main(int argc, char *argv[]){
 		CheckGLErrors();
 
 		// rendering
-		std::vector<vec3> v;
-		v.push_back(vec3(1,0,0));
-		v.push_back(vec3(0,0,0));
-		v.push_back(vec3(0,1,0));
-		v.push_back(vec3(0,0,0));
-		v.push_back(vec3(0,0,1));
-		v.push_back(vec3(0,0,0));
-		VertexArray va(6);
-		va.addBuffer("axis", 0, v);
-		glUseProgram(program.id);
-		glBindVertexArray(va.id);
-		glUniform3f(colorId, 0.8, 0.0, 0.0);
-		glDrawArrays(GL_LINE_STRIP, 0, 2);
-		glUniform3f(colorId, 0.0, 0.8, 0.0);
-		glDrawArrays(GL_LINE_STRIP, 2, 2);
-		glUniform3f(colorId, 0.0, 0.0, 0.8);
-		glDrawArrays(GL_LINE_STRIP, 4, 2);
-		glBindVertexArray(0);
+		for(int i = 0; i<objList.size(); i++){
+	            VertexArray temp(objList[i].v.size());
+	            temp.addBuffer("temp",0,objList[i].v);
+			glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
+			render(objList[i].primitive, program, temp);
+		}
 		CheckGLErrors();
 
 		// Swap buffers
@@ -194,11 +254,10 @@ int main(int argc, char *argv[]){
 // function field
 //------------------
 
-void render(Program &program, VertexArray &va) {
+void render(GLenum pri, Program &program, VertexArray &va) {
 	glUseProgram(program.id);
 	glBindVertexArray(va.id);
-	// glDrawArrays(GL_LINE_STRIP, 0, va.count);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, va.count);
+	glDrawArrays(pri, 0, va.count);
 	glBindVertexArray(0);
 	CheckGLErrors();
 }
@@ -233,6 +292,14 @@ void CheckGLErrors(){
 	}
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
+
+	if (key == GLFW_KEY_1 && action == GLFW_PRESS) getterMod = (getterMod+1)%getterModMax;
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) spacePressed = true;
+	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {spaceRelease = true;spacePressed = false;}
+	if (key == GLFW_KEY_S && action == GLFW_PRESS) SaveToStack = true;
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) TabToToggleObjType = (TabToToggleObjType+1)%objTypeMax;
+	if (key == GLFW_KEY_N && action == GLFW_PRESS) makeNewObj = true;
+
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 	// control
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) shiftPressed = true;
@@ -273,6 +340,6 @@ void cursor_callback(GLFWwindow* window, double xpos, double ypos)
 		anglleftright+=xlastoffset;
 	}else if(midPressed&&shiftPressed){
 		vec3 xpositive = normalize(cross(up,eye));
-		center += xpositive*xlastoffset+normalize(cross(eye,xpositive))*ylastoffset;
+		center += xpositive*xlastoffset*camera_distance+normalize(cross(eye,xpositive))*ylastoffset*camera_distance;
 	}
 }

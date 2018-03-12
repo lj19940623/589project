@@ -111,6 +111,9 @@ public:
             pthread_mutex_unlock( & mutex[index/2]);
             return temp;
       }
+      vec3 get3DCoor(){
+            return vec3((float)getXY(0)/1920,(float)getXY(2)/1920,(float)(getXY(1)+getXY(3))/2/1080);
+      }
 };
 // int main(){
 //       Server sv(2225);
