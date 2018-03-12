@@ -163,6 +163,7 @@ int main(int argc, char *argv[]){
 		if(getterMod==0){
 			spacePressed = false;
 			if(spaceRelease){
+				cout << "get a single point\n";
 				spaceRelease=false;
 				tempPoints.push_back(sv.get3DCoor());
 			}
@@ -176,7 +177,8 @@ int main(int argc, char *argv[]){
 			}
 		}
 		// save temp data to stack
-		if(SaveToStack){
+		if(SaveToStack && tempPoints.size()>0){
+			cout << "save "<<tempPoints.size()<<" points to stack"<<endl;
 			stack.push_back(tempPoints);
 			tempPoints.clear();
 		}
@@ -184,13 +186,13 @@ int main(int argc, char *argv[]){
 		if(makeNewObj){
 			makeNewObj = false;
 			if(TabToToggleObjType==0 && stack.size()>=1){
+				cout << "make new t=0 objs\n";
 				RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
 				objList.push_back(tempObj);
 				stack.pop_back();
 			}
 			// if()
 		}
-
 		// #define getterModMax  1
 		// int getterMod = 0;
 		// bool spaceRelease = false;
@@ -230,6 +232,13 @@ int main(int argc, char *argv[]){
 		CheckGLErrors();
 
 		// rendering
+		// real time pen tip
+		std::vector<vec3> pentip;
+		pentip.push_back(sv.get3DCoor());
+		VertexArray vpen(1);
+		vpen.addBuffer("pen",0,pentip);
+		renderPoints(program, vpen, 10);
+		// renderable Objs
 		for(int i = 0; i<objList.size(); i++){
 	            VertexArray temp(objList[i].v.size());
 	            temp.addBuffer("temp",0,objList[i].v);

@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include "generalHeader.h"
+
 using namespace std;
 
 class Server{

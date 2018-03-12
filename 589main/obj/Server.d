@@ -1,1 +1,1 @@
-obj/Server.o: src/Server.cpp
+obj/Server.o: src/Server.cpp src/generalHeader.h

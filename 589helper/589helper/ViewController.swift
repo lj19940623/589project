@@ -48,7 +48,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         var writeStream: Unmanaged<CFWriteStream>?
         
         CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault,
-                                           "10.13.179.98" as CFString,
+                                           "10.13.93.120" as CFString,
                                            2225,
                                            &readStream,
                                            &writeStream)
