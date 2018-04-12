@@ -58,7 +58,7 @@ bool spacePressed = false;
 bool spaceHold = false;
 bool SaveToStack = false;
 #define objTypeMax 1
-int TabToToggleObjType = 0;
+int TabToToggleObjType = 6;
 bool makeNewObj = false;
 
 //------------------
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]){
 			}else if(spacePressed && spaceHold){
 				steady_clock::time_point timeNow = steady_clock::now();
 				duration<double> time_span = duration_cast<duration<double>>(timeNow-timeLastCheck);
-				cout << time_span.count() << "\n";
+				// cout << time_span.count() << "\n";
 				if(time_span.count()>=0.1){ // assume we get 10 points per second
 					timeLastCheck = timeNow;
 					cout << "get a temp point(continues mode)\n";
@@ -172,12 +172,14 @@ int main(int argc, char *argv[]){
 			cout << "save "<<tempPoints.size()<<" points to stack"<<endl;
 			stack.push_back(tempPoints);
 			tempPoints.clear();
+		}else if(SaveToStack){
+			SaveToStack = false;
 		}
 		// save stack data to obj list
 		if(makeNewObj){
 			makeNewObj = false;
 			if(TabToToggleObjType==0 && stack.size()>=1){
-				cout << "make new t=0 objs\n";
+				cout << "make new line segment(t=0) objs\n";
 				RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
 				objList.push_back(tempObj);
 				stack.pop_back();
@@ -223,17 +225,32 @@ int main(int argc, char *argv[]){
 		vpen.addBuffer("pen",0,pentip);
 		renderPoints(program, vpen, 10);
 		// render tempPoints and stack
-		if(tempPoints.size()>0)stack.push_back(tempPoints);
-		int colorStage = 0;
+		if(tempPoints.size()>0)stack.push_back(tempPoints); // push temp to stack to simplify rendering, will pop later
+		int tempStackSize = stack.size();
+		int colorStage = ceil(cbrt(tempStackSize+objList.size()+1)); // to make curves/objs have different color
+		float colorDelta = 1.0f/(float)colorStage;
+		vec3 colorCur = vec3(0.0f,0.0f,0.0f);
 		if(stack.size()>0){
-			colorStage = ceil(cbrt(stack.size()+1));
+			for(int i = 0; i<tempStackSize; i++){
+				colorCur[0] += (i%colorStage)*colorDelta;		// TODO: validate color of lines
+				colorCur[1] += (i/colorStage%colorStage)*colorDelta;
+				colorCur[2] += (i/colorStage/colorStage%colorStage)*colorDelta;
+		            VertexArray temp(stack[i].size());
+		            temp.addBuffer("temp",0,stack[i]);
+				glUniform3f(colorId, colorCur.x, colorCur.y, colorCur.z);
+				render(GL_LINE_STRIP, program, temp);
+			}
 		}
-		if(tempPoints.size()>0)stack.pop_back();
+		if(tempPoints.size()>0) stack.pop_back(); // pop tempPoints
 		// renderable Objs
 		for(int i = 0; i<objList.size(); i++){
+			colorCur[0] += ((i+tempStackSize)%colorStage)*colorDelta;	// TODO: validate color of objs
+			colorCur[1] += ((i+tempStackSize)/colorStage%colorStage)*colorDelta;
+			colorCur[2] += ((i+tempStackSize)/colorStage/colorStage%colorStage)*colorDelta;
 	            VertexArray temp(objList[i].v.size());
 	            temp.addBuffer("temp",0,objList[i].v);
-			glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
+			// glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
+			glUniform3f(colorId, colorCur.x, colorCur.y, colorCur.z);
 			render(objList[i].primitive, program, temp);
 		}
 		CheckGLErrors();
@@ -244,12 +261,15 @@ int main(int argc, char *argv[]){
 
 		// print info
 		if(printInf){
-			cout << "INFO:\n\t camera info: "
-				<< camera_distance << "  "
-				<< angleupdown<<" "
-				<< anglleftright<<" "<<endl;
-			cout << "we have " << colorStage << " for " << stack.size()+(tempPoints.size()>0?1:0) << " temp and stack point data group\n";
-			cout << "real time pentip: " << to_string(v3pentip)<<endl;
+			cout << endl;
+			cout << "INFO:\n";
+			cout << "camera: " << camera_distance << " " << angleupdown<<" " << anglleftright<<" "<<endl;
+			cout << "real time pentip = " << to_string(v3pentip)<<endl;
+			cout << "tempPoints size = " << tempPoints.size() <<endl;
+			cout << "stack size = " << stack.size() <<endl;
+			cout << "objList size = " << objList.size() <<endl;
+			cout << "colorStage = " << colorStage << " for " << stack.size()+(tempPoints.size()>0?1:0) << " point-data-group(temp and stack)\n";
+			cout << endl;
 			printInf = false;
 		}
 	}
@@ -310,6 +330,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_S && action == GLFW_PRESS) SaveToStack = true;
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) TabToToggleObjType = (TabToToggleObjType+1)%objTypeMax;
 	if (key == GLFW_KEY_N && action == GLFW_PRESS) makeNewObj = true;
+	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		camera_distance = 1.0f;
+		anglleftright = 0.8;
+		angleupdown = 0.5;
+	}
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 	// control

@@ -45,6 +45,10 @@ public:
       BSpline(){
             resetKnots();
       }
+      BSpline(vector<vec3> ps){
+            controlPoints = ps;
+            resetKnots();
+      }
 
 };
 
