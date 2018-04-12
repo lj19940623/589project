@@ -10,7 +10,8 @@ public:
       RenderableObj(GLenum pri):primitive{pri}{
             v.clear();
       };
-      RenderableObj(GLenum pri, vec3 colorsIn, vector<vec3> vIn):primitive{pri}{
+      RenderableObj(GLenum pri, vec3 colorsIn, vector<vec3> vIn){//:primitive{pri}{
+            primitive = pri;
             v.clear();
             color =  colorsIn;
             v = vIn;

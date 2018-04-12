@@ -1,6 +1,7 @@
 // c++ based server obj
 // take byte stream data based on tcp connection from ios app sides
 // will implemented as multi thread server with mutex
+// adapted from cpsc441 boli-code
 #include <netinet/in.h>
 #include <stdio.h>
 #include <signal.h>
@@ -69,7 +70,7 @@ public:
       ~Server(){
             pthread_mutex_destroy( & mutex[0]);
             pthread_mutex_destroy( & mutex[1]);
-            cout << "server decomposed\n";
+            cout << "Server decomposed\n";
             close(parentsockfd);
       }
 
@@ -85,17 +86,17 @@ public:
             server.sin_addr.s_addr = htonl(INADDR_ANY);
             /* set up the transport-level end point to use TCP */
             if( (parentsockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1 ){
-                  cout << "server: socket() call failed!\n";
+                  cout << "Server: socket() call failed!\n";
                   return;
             }
             /* bind a specific address and port to the end point */
             if( ::bind(parentsockfd, (struct sockaddr *)&server, sizeof(struct sockaddr_in) ) == -1 ){
-                  cout << "server: bind() call failed!\n";
+                  cout << "Server: bind() call failed!\n";
                   return;
             }
             /* start listening for incoming connections from clients */
             if( listen(parentsockfd, 5) == -1 ){
-                  cout << "server: listen() call failed!\n";
+                  cout << "Server: listen() call failed!\n";
                   return;
             }
             pthread_create(&threads[0], NULL, subThread, (void *) this);
@@ -114,7 +115,7 @@ public:
             return temp;
       }
       vec3 get3DCoor(){
-            return vec3((float)getXY(0)/1920,(float)getXY(2)/1920,(float)(getXY(1)+getXY(3))/2/1080);
+            return vec3((float)getXY(1)/1080,(float)(1.0f-getXY(3)/1080.0f),(float)getXY(0)/1920);
       }
 };
 // int main(){

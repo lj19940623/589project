@@ -48,7 +48,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         var writeStream: Unmanaged<CFWriteStream>?
         
         CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault,
-                                           "10.13.93.120" as CFString,
+                                           "10.13.98.107" as CFString,
                                            2225,
                                            &readStream,
                                            &writeStream)
@@ -83,7 +83,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             i = i + 13
         }
         if x==0 && y==0 {
-//            print("Not found", Date())
+            print("Not found", Date())
         }else{
             print("Found at", x, y)
             let x4 = UInt8(x % 256)
@@ -100,23 +100,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             let y1 = UInt8(y / 256)
             let xy :UnsafePointer<UInt8> = UnsafePointer<UInt8>([x1,x2,x3,x4,y1,y2,y3,y4])
             outputStream.write(xy, maxLength: 8)
-//            let x4 = UInt8(x % 256)
-//            x = x / 256
-//            let x3 = UInt8(x % 256)
-//            x = x / 256
-//            let x2 = UInt8(x % 256)
-//            let x1 = UInt8(x / 256)
-//            let xp :UnsafePointer<UInt8> = UnsafePointer<UInt8>([x1,x2,x3,x4])
-//            outputStream.write(xp, maxLength: 4)
-//
-//            let y4 = UInt8(y % 256)
-//            y = y / 256
-//            let y3 = UInt8(y % 256)
-//            y = y / 256
-//            let y2 = UInt8(y % 256)
-//            let y1 = UInt8(y / 256)
-//            let yp :UnsafePointer<UInt8> = UnsafePointer<UInt8>([y1,y2,y3,y4])
-//            outputStream.write(yp, maxLength: 4)
         }
         CVPixelBufferUnlockBaseAddress(pixelBuffer,CVPixelBufferLockFlags(rawValue: 0))
         

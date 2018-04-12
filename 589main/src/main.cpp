@@ -14,8 +14,8 @@
 //------------------
 // window
 GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
-int windowWidth = 600;
-int windowHeight =400;
+int windowWidth = 500;
+int windowHeight = 500;
 // camera atrr
 // lookAt
 vec3 eye = vec3(0,0,1);
@@ -30,8 +30,8 @@ float zFar = 100.0f;
 // camera angles
 mat4 v;
 float camera_distance = 1.0f;
-float anglleftright = 0;
-float angleupdown = 0;
+float anglleftright = 0.8;
+float angleupdown = 0.5;
 // callbacks
 bool rightPressed = false;
 bool leftPressed = false;
@@ -44,23 +44,18 @@ float ylastoffset;
 //
 bool printInf = false;
 //
-vector<RenderableObj> objList;
 vector<vec3> tempPoints;
 vector<vector<vec3>> stack;
+vector<RenderableObj> objList;
 
 // // time related attri
-// steady_clock::time_point t1;
-// steady_clock::time_point t2;
-
-	// key 1 to shift between 1 time point getter and constant time interval pointer getter
-	// key space to start/stop point getter save data to temp
-	// key s to save temp to stack
-	// key tab to toggle different obj
-	// key n to pop stack to make obj
-#define getterModMax  1
+steady_clock::time_point timeLastCheck;
+steady_clock::time_point timeNow;
+#define getterModMax  2
 int getterMod = 0;
 bool spaceRelease = false;
 bool spacePressed = false;
+bool spaceHold = false;
 bool SaveToStack = false;
 #define objTypeMax 1
 int TabToToggleObjType = 0;
@@ -147,37 +142,33 @@ int main(int argc, char *argv[]){
 
 	cout << "start of while loop rendering"<<endl;
 	while(!glfwWindowShouldClose(window)){
-		// print info
-		if(printInf){
-			cout << "INFO:\t " ;
-			// add here
-			cout << camera_distance << "  "
-				<< angleupdown<<" "
-				<< anglleftright<<" "<<endl;
-			cout << "\n" ;
-			printInf = false;
-		}
+
 		// getterMod == 0 => single point mode
 		// getterMod == 1 => constant time interval to get point mode
 		// save getter data to temp
-		if(getterMod==0){
+		if(getterMod==0 && (spaceRelease == true)){
 			spacePressed = false;
-			if(spaceRelease){
-				cout << "get a single point\n";
-				spaceRelease=false;
-				tempPoints.push_back(sv.get3DCoor());
-			}
+			cout << "get a temp point(single mode)\n";
+			spaceRelease=false;
+			tempPoints.push_back(sv.get3DCoor());
 		}else if(getterMod==1){
-			if(spaceRelease){
-				spacePressed = false;
-				spaceRelease = false;
-			}
-			if(spacePressed){
-				tempPoints.push_back(sv.get3DCoor());
+			if(spacePressed && !spaceHold){
+				timeLastCheck = steady_clock::now();
+				spaceHold = true;
+			}else if(spacePressed && spaceHold){
+				steady_clock::time_point timeNow = steady_clock::now();
+				duration<double> time_span = duration_cast<duration<double>>(timeNow-timeLastCheck);
+				cout << time_span.count() << "\n";
+				if(time_span.count()>=0.1){ // assume we get 10 points per second
+					timeLastCheck = timeNow;
+					cout << "get a temp point(continues mode)\n";
+					tempPoints.push_back(sv.get3DCoor());
+				}
 			}
 		}
 		// save temp data to stack
 		if(SaveToStack && tempPoints.size()>0){
+			SaveToStack = false;
 			cout << "save "<<tempPoints.size()<<" points to stack"<<endl;
 			stack.push_back(tempPoints);
 			tempPoints.clear();
@@ -193,14 +184,6 @@ int main(int argc, char *argv[]){
 			}
 			// if()
 		}
-		// #define getterModMax  1
-		// int getterMod = 0;
-		// bool spaceRelease = false;
-		// bool SaveToStack = false;
-		// #define objTypeMax 1
-		// int TabToToggleObjType = 0;
-		// bool makeNewObj = false;
-		// update window
 		glUseProgram(program.id);
 		// get window size and reset viewport
 		glfwGetWindowSize(window, &windowWidth, &windowHeight);
@@ -234,10 +217,18 @@ int main(int argc, char *argv[]){
 		// rendering
 		// real time pen tip
 		std::vector<vec3> pentip;
-		pentip.push_back(sv.get3DCoor());
+		vec3 v3pentip = sv.get3DCoor();
+		pentip.push_back(v3pentip);
 		VertexArray vpen(1);
 		vpen.addBuffer("pen",0,pentip);
 		renderPoints(program, vpen, 10);
+		// render tempPoints and stack
+		if(tempPoints.size()>0)stack.push_back(tempPoints);
+		int colorStage = 0;
+		if(stack.size()>0){
+			colorStage = ceil(cbrt(stack.size()+1));
+		}
+		if(tempPoints.size()>0)stack.pop_back();
 		// renderable Objs
 		for(int i = 0; i<objList.size(); i++){
 	            VertexArray temp(objList[i].v.size());
@@ -250,11 +241,22 @@ int main(int argc, char *argv[]){
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		// print info
+		if(printInf){
+			cout << "INFO:\n\t camera info: "
+				<< camera_distance << "  "
+				<< angleupdown<<" "
+				<< anglleftright<<" "<<endl;
+			cout << "we have " << colorStage << " for " << stack.size()+(tempPoints.size()>0?1:0) << " temp and stack point data group\n";
+			cout << "real time pentip: " << to_string(v3pentip)<<endl;
+			printInf = false;
+		}
 	}
 	// Close OpenGL window and terminate GLFW
 	glfwDestroyWindow(window);
 	glfwTerminate();
-	cout << "End of destroy \n ";
+	cout << "End of destroy \n";
 
 	return 0;
 }
