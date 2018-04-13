@@ -150,9 +150,13 @@ public:
                   stack.pop_back();
                   done = true;
             }else if(objType == 5 && stack.size()>=3){
+                  // cross sectional blending surface
+                  // idea:
+                  //  move to origin -> adjust orientation -> scale -> rotate 90 degree -> move to strokes
                   v.clear();
                   savedStackData.clear();
                   primitive = GL_TRIANGLE_STRIP;
+                  // primitive = GL_LINE_STRIP;
                   savedStackData.push_back(stack[stack.size()-3]); // ql
                   savedStackData.push_back(stack[stack.size()-2]); // qr
                   savedStackData.push_back(stack[stack.size()-1]); // t: cross section
@@ -161,17 +165,47 @@ public:
                   // default bspline strokes
                   BSpline ql(savedStackData[0]);
                   BSpline qr(savedStackData[1]);
+                  // clear z of tCurve for cross section
+                  // move to ori for further transformation
+                  vec3 save1stPointOfT = savedStackData[2][0];
+                  for(int i=0; i<savedStackData[2].size(); i++){
+                        savedStackData[2][i] = savedStackData[2][i] - save1stPointOfT;
+                        savedStackData[2][i][2] = 0;
+                  }
                   BSpline t(savedStackData[2]);
                   vector<vec3> qlLines =  ql.getLines();
                   vector<vec3> qrLines =  qr.getLines();
                   vector<vec3> tLines =  t.getLines();
-                  
-
+                  float tLen = length(tLines.back()-tLines.front());
+                  vec3 direction =normalize(tLines.back()-tLines.front());
+                  vec3 directionFront = cross(direction, vec3(0,1,0));
+                  vec3 directionUp = cross(directionFront, direction);
+                  mat4 toOri = inverse(mat4(vec4(direction,0),vec4(directionFront,0),vec4(directionUp,0),vec4(0,0,0,1)));
+                  int maxIdxU = 1.0f/ql.du;
+                  for(int u=0; u<maxIdxU-1; u++){
+                        vec3 direction1 =normalize(qrLines[u]-qlLines[u]);
+                        vec3 direction2 =normalize(qrLines[u+1]-qlLines[u+1]);
+                        vec3 tangent1 = normalize(qlLines[u+1]+qrLines[u+1]-qlLines[u]-qrLines[u]); // use as front
+                        vec3 tangent2 = normalize(qlLines[u+2]+qrLines[u+2]-qlLines[u+1]-qrLines[u+1]);
+                        vec3 directionUp1 = cross(tangent1,direction1);
+                        vec3 directionUp2 = cross(tangent2,direction2);
+                        mat4 trans1 = translate(mat4(1), qlLines[u]);
+                        mat4 trans2 = translate(mat4(1), qlLines[u+1]);
+                        float s1 = length(qrLines[u]-qlLines[u])/tLen;
+                        float s2 = length(qrLines[u+1]-qlLines[u+1])/tLen;
+                        mat4 scale1 = scale(mat4(1),vec3(s1,s1,s1));
+                        mat4 scale2 = scale(mat4(1),vec3(s2,s2,s2));
+                        mat4 toRLAxis1 = trans1*scale1*mat4(vec4(direction1,0),vec4(tangent1,0),vec4(directionUp1,0),vec4(0,0,0,1));
+                        mat4 toRLAxis2 = trans2*scale2*mat4(vec4(direction2,0),vec4(tangent2,0),vec4(directionUp2,0),vec4(0,0,0,1));
+                        for(int v=0; v<tLines.size(); v++){
+                              this->v.push_back(vec3(toRLAxis1*toOri*vec4(tLines[v],1)));
+                              this->v.push_back(vec3(toRLAxis2*toOri*vec4(tLines[v],1)));
+                        }
+                  }
                   stack.pop_back();
                   stack.pop_back();
                   stack.pop_back();
                   done = true;
-
             }
       };
 };

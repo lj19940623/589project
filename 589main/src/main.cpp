@@ -375,6 +375,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		anglleftright = 0.8;
 		angleupdown = 0.5;
 	}
+	if (key == GLFW_KEY_UP && action == GLFW_RELEASE) angleupdown += 0.05;
+	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE) angleupdown -= 0.05;
+	if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) anglleftright += 0.05;
+	if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) anglleftright -= 0.05;
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 	// control
