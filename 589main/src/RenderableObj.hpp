@@ -11,7 +11,7 @@
 // 4: rotational ..
 // 5: cross sectional ..
 // 6: spray along curve
-// 7: ??
+// 7: sweep surface
 class RenderableObj{
       vector<vector<vec3>> savedStackData; // like control points, vertex....
 public:
@@ -215,7 +215,6 @@ public:
                   // use GL_TRIANGLES to simulate points in cloud
                   // size is fix
                   // position, normal of triangle are random
-                  float prob = 0.01;
                   float pSize = 0.008;
                   float spraySize = 0.06;
                   //
@@ -243,6 +242,47 @@ public:
                               v.push_back(vec3(rotate(r3, triNor)*vec4(cross(triNor,vec3(0,1,0)),1))*pSize+position);
                         }
                   }
+                  stack.pop_back();
+                  done = true;
+            }else if(objType == 7 && stack.size()>=2){
+                  // sweep surface
+                  v.clear();
+                  savedStackData.clear();
+                  primitive = GL_TRIANGLE_STRIP;
+                  savedStackData.push_back(stack[stack.size()-2]);
+                  savedStackData.push_back(stack[stack.size()-1]);
+                  savedStackData[0].push_back(savedStackData[0][0]);
+                  // discard y data and center to mid
+                  vec3 avg = vec3(0,0,0);
+                  for(int i=0; i<savedStackData[0].size(); i++){
+                        savedStackData[0][i][1] = 0;
+                        avg += savedStackData[0][i];
+                  }
+                  avg = avg*(1.0f/savedStackData[0].size());
+                  for(int i=0; i<savedStackData[0].size(); i++){
+                        savedStackData[0][i] -= avg;
+                  }
+                  BSpline cv(savedStackData[0]);
+                  BSpline tu(savedStackData[1]);
+                  vector<vec3> tuLines = tu.getLines();
+                  vector<vec3> cvLines = cv.getLines();
+                  int maxIdxUV = 1.0f/cv.du;
+                  for(int u=0; u<maxIdxUV-1; u++){
+                        vec3 tangent1 = normalize(tuLines[u+1]-tuLines[u]);
+                        vec3 tangent2 = normalize(tuLines[u+2]-tuLines[u+1]);
+                        vec3 nor = normalize(tangent2-tangent1);
+                        vec3 binor1 = cross(tangent1,nor);
+                        vec3 binor2 = cross(tangent2,nor);
+                        mat4 trans1 = translate(mat4(1), tuLines[u]);
+                        mat4 trans2 = translate(mat4(1), tuLines[u+1]);
+                        mat4 toCoor1 = trans1*mat4(vec4(binor1,0),vec4(tangent1,0),vec4(nor,0),vec4(0,0,0,1));
+                        mat4 toCoor2 = trans2*mat4(vec4(binor2,0),vec4(tangent2,0),vec4(nor,0),vec4(0,0,0,1));
+                        for(int v=0; v<maxIdxUV; v++){
+                              this->v.push_back(vec3(toCoor1*vec4(cvLines[v],1)));
+                              this->v.push_back(vec3(toCoor2*vec4(cvLines[v],1)));
+                        }
+                  }
+                  stack.pop_back();
                   stack.pop_back();
                   done = true;
             }

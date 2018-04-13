@@ -35,7 +35,7 @@ communication: ios stream and c++ server: finished with multithread and mutex.
 iPhone 7 Plus Back Telephoto Camera has FOV at about 60 degree. https://developer.apple.com/library/content/documentation/DeviceInformation/Reference/iOSDeviceCompatibility/Cameras/Cameras.html
 frame: process design(tempPoints->stack->objs), pointGetter design(single, continues), realtime frames.
 tool kit(renderableObj):
-      add: curve(line seg, Bspline),  surface(bilinear blending, rotational blending, cross sectional blending), other(point, spray)
+      add: curve(line seg, Bspline),  surface(bilinear blending, rotational blending, cross sectional blending, sweep surface), other(point, spray)
       selecting and pasting
       union, intersection and difference
 Testing and demo scene
