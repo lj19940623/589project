@@ -149,7 +149,28 @@ public:
                   stack.pop_back();
                   stack.pop_back();
                   done = true;
-            }else if(objType == 5 && stack.size()>=2){
+            }else if(objType == 5 && stack.size()>=3){
+                  v.clear();
+                  savedStackData.clear();
+                  primitive = GL_TRIANGLE_STRIP;
+                  savedStackData.push_back(stack[stack.size()-3]); // ql
+                  savedStackData.push_back(stack[stack.size()-2]); // qr
+                  savedStackData.push_back(stack[stack.size()-1]); // t: cross section
+                  // interpolate 1st point of ql qr to connect them.
+                  savedStackData[0][0] = savedStackData[1][0] =(savedStackData[0][0] + savedStackData[1][0])*0.5f;
+                  // default bspline strokes
+                  BSpline ql(savedStackData[0]);
+                  BSpline qr(savedStackData[1]);
+                  BSpline t(savedStackData[2]);
+                  vector<vec3> qlLines =  ql.getLines();
+                  vector<vec3> qrLines =  qr.getLines();
+                  vector<vec3> tLines =  t.getLines();
+                  
+
+                  stack.pop_back();
+                  stack.pop_back();
+                  stack.pop_back();
+                  done = true;
 
             }
       };
