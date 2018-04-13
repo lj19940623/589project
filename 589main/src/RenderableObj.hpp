@@ -7,7 +7,11 @@
 // 0: points
 // 1: line segment
 // 2: BSpline
-// 2: ..
+// 3: bilinear ..
+// 4: rotational ..
+// 5: cross sectional ..
+// 6: spray along curve
+// 7: ??
 class RenderableObj{
       vector<vector<vec3>> savedStackData; // like control points, vertex....
 public:
@@ -156,7 +160,6 @@ public:
                   v.clear();
                   savedStackData.clear();
                   primitive = GL_TRIANGLE_STRIP;
-                  // primitive = GL_LINE_STRIP;
                   savedStackData.push_back(stack[stack.size()-3]); // ql
                   savedStackData.push_back(stack[stack.size()-2]); // qr
                   savedStackData.push_back(stack[stack.size()-1]); // t: cross section
@@ -204,6 +207,42 @@ public:
                   }
                   stack.pop_back();
                   stack.pop_back();
+                  stack.pop_back();
+                  done = true;
+            }else if(objType == 6 && stack.size()>=1){
+                  // spray
+                  // idea:
+                  // use GL_TRIANGLES to simulate points in cloud
+                  // size is fix
+                  // position, normal of triangle are random
+                  float prob = 0.01;
+                  float pSize = 0.008;
+                  float spraySize = 0.06;
+                  //
+                  v.clear();
+                  savedStackData.clear();
+                  primitive = GL_TRIANGLES;
+                  savedStackData.push_back(stack[stack.size()-1]);
+                  // default bspline strokes
+                  BSpline curve(savedStackData[0]);
+                  vector<vec3> cLines = curve.getLines();
+                  for(int u=0; u<cLines.size()-1; u++){
+                        vec3 tangent1 = normalize(cLines[u+1]-cLines[u]);
+                        vec3 tangent2 = normalize(cLines[u+2]-cLines[u+1]);
+                        vec3 nor = normalize(tangent2-tangent1);
+                        int numOfTri = rand()%10;
+                        for(int i=0; i<numOfTri; i++){
+                              float r0 = (float)(rand()%628)/100;
+                              vec3 position = cLines[u]+vec3(rotate(r0, tangent1)*vec4(nor,1))*spraySize*(float)(rand()%100)/100;
+                              float r1 = (float)(rand()%628)/100;
+                              float r2 = (float)(rand()%628)/100;
+                              vec3 triNor = vec3(sqrt(1.0f-sin(r1)*sin(r1))*sin(r2),sin(r1),sqrt(1.0f-sin(r1)*sin(r1))*cos(r2));
+                              v.push_back(position);
+                              v.push_back(triNor*pSize+position);
+                              float r3 = (float)(rand()%628)/100;
+                              v.push_back(vec3(rotate(r3, triNor)*vec4(cross(triNor,vec3(0,1,0)),1))*pSize+position);
+                        }
+                  }
                   stack.pop_back();
                   done = true;
             }

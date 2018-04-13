@@ -57,7 +57,7 @@ bool spaceRelease = false;
 bool spacePressed = false;
 bool spaceHold = false;
 bool SaveToStack = false;
-#define objTypeMax 6
+#define objTypeMax 7
 int TabToToggleObjType = 0;
 bool makeNewObj = false;
 bool readFile = false;
@@ -359,11 +359,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				break;
 			}
 			case 5:{
-				cout << "objType change to (5)cross sectional blending surface with bspline ??,  min # stack = ??\n";
+				cout << "objType change to (5)cross sectional blending surface with bspline strokes,  min # stack = 3\n";
 				break;
 			}
 			case 6:{
-				cout << "objType change to (6)spray along with bspline ??,  min # stack = ??\n";
+				cout << "objType change to (6)spray along with bspline curve,  min # stack = 1\n";
 				break;
 			}
 		}
