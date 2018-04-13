@@ -335,7 +335,39 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) spacePressed = true;
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {spaceRelease = true;spacePressed = false;}
 	if (key == GLFW_KEY_S && action == GLFW_PRESS) SaveToStack = true;
-	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) TabToToggleObjType = (TabToToggleObjType+1)%objTypeMax;
+	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
+		TabToToggleObjType = (TabToToggleObjType+1)%objTypeMax;
+		switch (TabToToggleObjType) {
+			case 0:{
+				cout << "objType change to (0)points\n";
+				break;
+			}
+			case 1:{
+				cout << "objType change to (1)line segments\n";
+				break;
+			}
+			case 2:{
+				cout << "objType change to (2)bspline with some default setting\n";
+				break;
+			}
+			case 3:{
+				cout << "objType change to (3)bilinear blending surface with bspline edges, min # stack = 4\n";
+				break;
+			}
+			case 4:{
+				cout << "objType change to (4)rotational blending surface with bspline strokes, min # stack = 2\n";
+				break;
+			}
+			case 5:{
+				cout << "objType change to (5)cross sectional blending surface with bspline ??,  min # stack = ??\n";
+				break;
+			}
+			case 6:{
+				cout << "objType change to (6)spray along with bspline ??,  min # stack = ??\n";
+				break;
+			}
+		}
+	}
 	if (key == GLFW_KEY_N && action == GLFW_PRESS) makeNewObj = true;
 	if (key == GLFW_KEY_F && action == GLFW_PRESS) readFile = true;
 	if (key == GLFW_KEY_C && action == GLFW_PRESS) {

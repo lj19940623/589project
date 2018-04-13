@@ -44,7 +44,6 @@ public:
                   savedStackData.push_back(stack.back());
                   BSpline bspline(savedStackData[0]);       // BSpline class is adapted from my assignment
                   v = bspline.getLines();
-                  cout << "v.size" << v.size()<<endl;
                   stack.pop_back();
                   done = true;
             }else if(objType == 3 && stack.size()>=4){
@@ -54,7 +53,7 @@ public:
                   // since it is hard to draw P0(0)=Q0(0)..., P0(0) Q0(0)...will be interpolated
                   v.clear();
                   savedStackData.clear();
-                  primitive = GL_LINE_STRIP;
+                  primitive = GL_TRIANGLE_STRIP;
                   savedStackData.push_back(stack[stack.size()-4]); // P0
                   savedStackData.push_back(stack[stack.size()-3]); // P1
                   savedStackData.push_back(stack[stack.size()-2]); // Q0
@@ -74,24 +73,42 @@ public:
                   BSpline q0(savedStackData[2]);
                   BSpline q1(savedStackData[3]);
                   savedStackData.push_back(p0.getLines()); // idx = 4
-                  savedStackData.push_back(p1.getLines());
-                  savedStackData.push_back(q0.getLines());
+                  savedStackData.push_back(p1.getLines()); // 5
+                  savedStackData.push_back(q0.getLines()); // 6
                   savedStackData.push_back(q1.getLines()); // idx = 7
                   // make surface mesh by bilinearly blended surface formula
-                  float uDelta = p0.du;
-                  for(float u = 0; u <= 1.0f; u+=uDelta){
-                        temp
-                        for(float v = 0; v<=1.0f; v+=uDelta){
-                              
+                  int maxIdxUV = 1.0f/p0.du;
+                  for(int u = 0; u < maxIdxUV; u++){
+                        for(int v = (u%2==0?0:maxIdxUV); v <= maxIdxUV && v >= 0; (u%2==0?v++:v--)){
+                              float uu = (float)u/maxIdxUV;
+                              float vv = (float)v/maxIdxUV;
+                              vec3 Quv = savedStackData[6][v]*(1.0f-uu) + savedStackData[7][v]*uu
+                                    + savedStackData[4][u]*(1.0f-vv) + savedStackData[5][u]*vv
+                                    - (savedStackData[4][0]*(1-uu)*(1-vv) + savedStackData[4][maxIdxUV]*uu*(1-vv)
+                                    + savedStackData[5][0]*(1-uu)*vv + savedStackData[5][maxIdxUV]*uu*vv);
+                              this->v.push_back(Quv);
+                              u++;
+                              uu = (float)u/maxIdxUV;
+                              vec3 Qu1v = savedStackData[6][v]*(1.0f-uu) + savedStackData[7][v]*uu
+                                    + savedStackData[4][u]*(1.0f-vv) + savedStackData[5][u]*vv
+                                    - (savedStackData[4][0]*(1-uu)*(1-vv) + savedStackData[4][maxIdxUV]*uu*(1-vv)
+                                    + savedStackData[5][0]*(1-uu)*vv + savedStackData[5][maxIdxUV]*uu*vv);
+                              this->v.push_back(Qu1v);
+                              u--;
                         }
                   }
-//
                   stack.pop_back();
                   stack.pop_back();
                   stack.pop_back();
                   stack.pop_back();
                   done = true;
-
+            }else if(objType == 1 && stack.size()>=1){
+                  // line segment
+                  v.clear();
+                  primitive = GL_LINE_STRIP;
+                  v = stack.back();
+                  stack.pop_back();
+                  done = true;
             }
       };
 };
