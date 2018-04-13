@@ -11,10 +11,12 @@
 class RenderableObj{
       vector<vector<vec3>> savedStackData; // like control points, vertex....
 public:
-      GLenum primitive;
       bool done = false;
-      vector<vec3> v;
-      RenderableObj(int objType){//:primitive{pri}{
+      int type;
+      GLenum primitive; // pri type for rendering
+      vector<vec3> v; // mesh verties for rendering
+      RenderableObj(int objType){ // basic constructor
+            type = objType;
             v.clear();
             if(objType==1){
                   primitive = GL_LINE_STRIP;
@@ -22,6 +24,7 @@ public:
             }
       };
       RenderableObj(int objType, vector<vector<vec3>> & stack){
+            type = objType;
             if(objType == 0 && stack.size()>=1){
                   // points
                   v.clear();
@@ -102,13 +105,52 @@ public:
                   stack.pop_back();
                   stack.pop_back();
                   done = true;
-            }else if(objType == 1 && stack.size()>=1){
-                  // line segment
+            }else if(objType == 4 && stack.size()>=2){
+                  // rotational blending surface
                   v.clear();
-                  primitive = GL_LINE_STRIP;
-                  v = stack.back();
+                  savedStackData.clear();
+                  primitive = GL_TRIANGLE_STRIP;
+                  savedStackData.push_back(stack[stack.size()-2]); // ql
+                  savedStackData.push_back(stack[stack.size()-1]); // qr
+                  // z axis data will be discarded since ql qr are co-planner 2D curves (strokes)
+                  for(int i=0; i<savedStackData[0].size(); i++){
+                        savedStackData[0][i][2]=0;
+                        savedStackData[1][i][2]=0;
+                  }
+                  // default bspline strokes
+                  BSpline ql(savedStackData[0]);
+                  BSpline qr(savedStackData[1]);
+                  vector<vec3> qlLines =  ql.getLines();
+                  vector<vec3> qrLines =  qr.getLines();
+                  // center curve
+                  vector<vec3> cu;
+                  for(int i=0; i<qlLines.size(); i++){
+                        cu.push_back((qlLines[i]+qrLines[i])*0.5f);
+                  }
+                  savedStackData.push_back(qlLines); // idx = 2
+                  savedStackData.push_back(qrLines); // 3
+                  savedStackData.push_back(cu); // idx = 4 , cu
+                  // idea:
+                  // tu(v), for fixed u, parameterizes the circle perpendicular to } with the center c(u)
+                  // and passing through ql(u) and qr(u) at each u
+                  int maxIdxU = 1.0f/ql.du;
+                  int maxIdxV = 100;
+                  float dv = 3.1415*2/(float)maxIdxV;
+                  for(int u=0; u<maxIdxU-1; u++){
+                        vec3 tangent1 = normalize(cu[u+1]-cu[u]); // TODO: may have bug
+                        vec3 tangent2 = normalize(cu[u+2]-cu[u+1]);
+                        vec4 d1 = vec4(qlLines[u]-cu[u],1);
+                        vec4 d2 = vec4(qlLines[u+1]-cu[u+1],1);
+                        for(int v=0; v<maxIdxV; v++){
+                              this->v.push_back(vec3(rotate(dv*v, tangent1)*d1)+cu[u]);
+                              this->v.push_back(vec3(rotate(dv*v, tangent2)*d2)+cu[u+1]);
+                        }
+                  }
+                  stack.pop_back();
                   stack.pop_back();
                   done = true;
+            }else if(objType == 5 && stack.size()>=2){
+
             }
       };
 };
