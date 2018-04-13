@@ -115,7 +115,10 @@ public:
             return temp;
       }
       vec3 get3DCoor(){
-            return vec3((float)getXY(1)/1080,(float)(1.0f-getXY(3)/1080.0f),(float)getXY(0)/1920);
+            // normalize to [-1,1]*[-1,1]*[-1,1] space
+            // TODO: need to use fov.. to transform from camera space to world space
+            // TODO: validate this func
+            return vec3((float)getXY(1)/1080*2-1,(float)(1.0f-getXY(3)/1080.0f*2),(float)getXY(0)/1920*2-1);
       }
 };
 // int main(){

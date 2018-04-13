@@ -57,9 +57,10 @@ bool spaceRelease = false;
 bool spacePressed = false;
 bool spaceHold = false;
 bool SaveToStack = false;
-#define objTypeMax 1
-int TabToToggleObjType = 6;
+#define objTypeMax 6
+int TabToToggleObjType = 0;
 bool makeNewObj = false;
+bool readFile = false;
 
 //------------------
 // function shortcut
@@ -68,6 +69,7 @@ void render(GLenum pri, Program &program, VertexArray &va);
 void renderPoints(Program &program, VertexArray &va, int pointsize);
 void renderLines(Program &program, VertexArray &va);
 
+void loadFile( std::string const & f);
 void CheckGLErrors();
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -124,24 +126,26 @@ int main(int argc, char *argv[]){
 	Server sv(2225);
 	sv.start();
 	cout <<"server started, please open ios app with proper ip target!\n";
-	RenderableObj xaxis(GL_LINES);
+	RenderableObj xaxis(1);
 	xaxis.v.push_back(vec3(1,0,0));
 	xaxis.v.push_back(vec3(0,0,0));
-	xaxis.color = vec3(0.9,0.0,0.0);
 	objList.push_back(xaxis);
-	RenderableObj yaxis(GL_LINES);
+	RenderableObj yaxis(1);
 	yaxis.v.push_back(vec3(0,1,0));
 	yaxis.v.push_back(vec3(0,0,0));
-	yaxis.color = vec3(0.0,0.9,0.0);
 	objList.push_back(yaxis);
-	RenderableObj zaxis(GL_LINES);
+	RenderableObj zaxis(1);
 	zaxis.v.push_back(vec3(0,0,1));
 	zaxis.v.push_back(vec3(0,0,0));
-	zaxis.color = vec3(0.0,0.0,0.9);
 	objList.push_back(zaxis);
 
 	cout << "start of while loop rendering"<<endl;
 	while(!glfwWindowShouldClose(window)){
+		if(readFile){
+			string file( "./data/config.txt" );
+			loadFile(file);
+			readFile = false;
+		}
 
 		// getterMod == 0 => single point mode
 		// getterMod == 1 => constant time interval to get point mode
@@ -178,12 +182,14 @@ int main(int argc, char *argv[]){
 		// save stack data to obj list
 		if(makeNewObj){
 			makeNewObj = false;
-			if(TabToToggleObjType==0 && stack.size()>=1){
-				cout << "make new line segment(t=0) objs\n";
-				RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
-				objList.push_back(tempObj);
-				stack.pop_back();
-			}
+			RenderableObj tempObj(TabToToggleObjType, stack);
+			if(tempObj.done) objList.push_back(tempObj);
+			// if(TabToToggleObjType==0 && stack.size()>=1){
+			// 	cout << "make new line segment(t=0) objs\n";
+			// 	RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
+			// 	objList.push_back(tempObj);
+			// 	stack.pop_back();
+			// }
 			// if()
 		}
 		glUseProgram(program.id);
@@ -232,9 +238,9 @@ int main(int argc, char *argv[]){
 		vec3 colorCur = vec3(0.0f,0.0f,0.0f);
 		if(stack.size()>0){
 			for(int i = 0; i<tempStackSize; i++){
-				colorCur[0] += (i%colorStage)*colorDelta;		// TODO: validate color of lines
-				colorCur[1] += (i/colorStage%colorStage)*colorDelta;
-				colorCur[2] += (i/colorStage/colorStage%colorStage)*colorDelta;
+				colorCur[0] = (i%colorStage)*colorDelta;		// TODO: validate color of lines
+				colorCur[1] = (i/colorStage%colorStage)*colorDelta;
+				colorCur[2] = (i/colorStage/colorStage%colorStage)*colorDelta;
 		            VertexArray temp(stack[i].size());
 		            temp.addBuffer("temp",0,stack[i]);
 				glUniform3f(colorId, colorCur.x, colorCur.y, colorCur.z);
@@ -244,9 +250,9 @@ int main(int argc, char *argv[]){
 		if(tempPoints.size()>0) stack.pop_back(); // pop tempPoints
 		// renderable Objs
 		for(int i = 0; i<objList.size(); i++){
-			colorCur[0] += ((i+tempStackSize)%colorStage)*colorDelta;	// TODO: validate color of objs
-			colorCur[1] += ((i+tempStackSize)/colorStage%colorStage)*colorDelta;
-			colorCur[2] += ((i+tempStackSize)/colorStage/colorStage%colorStage)*colorDelta;
+			colorCur[0] = ((i+tempStackSize)%colorStage)*colorDelta;	// TODO: validate color of objs
+			colorCur[1] = ((i+tempStackSize)/colorStage%colorStage)*colorDelta;
+			colorCur[2] = ((i+tempStackSize)/colorStage/colorStage%colorStage)*colorDelta;
 	            VertexArray temp(objList[i].v.size());
 	            temp.addBuffer("temp",0,objList[i].v);
 			// glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
@@ -269,6 +275,7 @@ int main(int argc, char *argv[]){
 			cout << "stack size = " << stack.size() <<endl;
 			cout << "objList size = " << objList.size() <<endl;
 			cout << "colorStage = " << colorStage << " for " << stack.size()+(tempPoints.size()>0?1:0) << " point-data-group(temp and stack)\n";
+			cout << "next obj type "<< TabToToggleObjType <<endl;
 			cout << endl;
 			printInf = false;
 		}
@@ -330,6 +337,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_S && action == GLFW_PRESS) SaveToStack = true;
 	if (key == GLFW_KEY_TAB && action == GLFW_PRESS) TabToToggleObjType = (TabToToggleObjType+1)%objTypeMax;
 	if (key == GLFW_KEY_N && action == GLFW_PRESS) makeNewObj = true;
+	if (key == GLFW_KEY_F && action == GLFW_PRESS) readFile = true;
 	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
 		camera_distance = 1.0f;
 		anglleftright = 0.8;
@@ -378,4 +386,49 @@ void cursor_callback(GLFWwindow* window, double xpos, double ypos)
 		vec3 xpositive = normalize(cross(up,eye));
 		center += xpositive*xlastoffset*camera_distance+normalize(cross(eye,xpositive))*ylastoffset*camera_distance;
 	}
+}
+
+void loadFile( std::string const & f) {
+	if ( f.empty() ) cerr << "ERROR: Given a blank filename." << endl;
+	ifstream file;
+	file.open( f, fstream::in );
+	if ( file.fail() )cerr << "ERROR: Couldn't load \"" << f << "\"." << endl;
+	string buffer;
+	vector<vec3> tempStack;
+	while( file.good() ) {	// while we have data, read in a line
+		buffer.clear();
+		getline( file, buffer );
+		size_t commentPos = buffer.find("#");	// clear out any comments
+		if ( commentPos == 0 )	continue;	// the entire line was a comment? trash it!
+		else if ( commentPos != string::npos ) buffer = buffer.substr( 0, commentPos ); // cut after
+		else if ( buffer.size() < 1 ) break; // end of Read
+		switch (buffer.at(0)) {
+			case 'T':{
+				float x1,y1,z1;
+				istringstream ss(buffer.substr(2));
+				ss >> x1 >> y1 >> z1;
+				tempPoints.push_back(vec3(x1,y1,z1));
+				break;
+			}
+			case 'S':{
+				float x1,y1,z1;
+				istringstream ss(buffer.substr(2));
+				ss >> x1 >> y1 >> z1;
+				tempStack.push_back(vec3(x1,y1,z1));
+				break;
+			}
+			case 'P':{
+				if(tempStack.size()!=0){
+					stack.push_back(tempStack);
+					tempStack.clear();
+				}else if(tempPoints.size()!=0){
+					stack.push_back(tempPoints);
+					tempPoints.clear();
+				}
+				break;
+			}
+		}
+	}
+	file.close();
+	cout << "data from file loaded, u can edit file again now.\n";
 }

@@ -1,19 +1,11 @@
-// physical based modeling of roller coaster
 #ifndef BSPLINE_HPP
 #define BSPLINE_HPP
 #include "generalHeader.h"
 
 class BSpline{
 public:
-      int orderK = 2;
+      int orderK = 3;
       void setK(int k){
-            // if (orderK!=k){
-            //       orderK = k;
-            //       resetKnots();
-            // }
-            // if(k>controlPoints.size()){
-            //       orderK=controlPoints.size();
-            // }
             int tempK = std::max(std::min(k,(int)controlPoints.size()),1);
             if(tempK==orderK){
 
@@ -25,7 +17,7 @@ public:
       vector<float> knots;
       // degree will always be orderK-1
       // continuity will always be degree-1
-      float du = 0.0001;
+      float du = 0.001;
       float getKnotUi(int i); // knotU implemented as function for change
       float getStandardKnotUi(int i);
 

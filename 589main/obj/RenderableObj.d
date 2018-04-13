@@ -1,2 +1,2 @@
 obj/RenderableObj.o: src/RenderableObj.cpp src/RenderableObj.hpp \
-  src/generalHeader.h
+  src/generalHeader.h src/BSpline.hpp

@@ -1,0 +1,31 @@
+# CPSC589 project
+# Jian Li
+# script style config:
+# T: add vec3 to tempPoints
+# S: add vec3 to tempStack
+# P: push tempStack to stack / push tempPoints to stack
+T 0.1 0.2 0.1
+T 0.2 0.2 0.1
+T 0.2 0.4 0.2
+T 0.2 0.2 0.3
+T 0.0 0.2 0.2
+T -0.3 0.2 0.6
+T -0.4 0.2 0.5
+#
+S -0.1 -0.1 0
+S -0.2 -0.1 0
+S -0.1 -0.2 0
+S -0.2 -0.2 0
+S -0.1 -0.3 0
+S -0.3 -0.1 0
+S -0.0 -0.4 0
+S -0.4 -0.0 0
+S -0.2 -0.3 0
+S -0.3 -0.2 0
+S -0.4 -0.1 0
+S -0.1 -0.4 0
+S -0.5 -0.0 0
+S -0.0 -0.5 0
+#
+P
+#

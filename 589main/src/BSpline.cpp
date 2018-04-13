@@ -66,6 +66,7 @@ vector<vec3> BSpline :: getMesh(){
 }
 vector<vec3> BSpline :: getLines(){
       vector<vec3> mesh;
+      // cout << "x min = " << knots[orderK-1] << " x max = " << knots[getm()+1]<<endl;
       for(float x = knots[orderK-1]; x <= knots[getm()+1]; x+=du){
             mesh.push_back(E_delta_1(orderK, controlPoints.size()-1, x));
             // cout <<"mesh "<<x <<" "<< to_string(E_delta_1(orderK, controlPoints.size()-1, x))<<endl;
