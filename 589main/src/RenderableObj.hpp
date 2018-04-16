@@ -192,7 +192,7 @@ public:
                   int maxIdxV = 100;
                   float dv = 3.1415*2/(float)maxIdxV;
                   for(int u=0; u<maxIdxU-1; u++){
-                        vec3 tangent1 = normalize(cu[u+1]-cu[u]); // TODO: may have bug
+                        vec3 tangent1 = normalize(cu[u+1]-cu[u]); 
                         vec3 tangent2 = normalize(cu[u+2]-cu[u+1]);
                         vec4 d1 = vec4(qlLines[u]-cu[u],1);
                         vec4 d2 = vec4(qlLines[u+1]-cu[u+1],1);
