@@ -252,7 +252,7 @@ public:
                         mat4 toRLAxis1 = trans1*scale1*mat4(vec4(direction1,0),vec4(tangent1,0),vec4(directionUp1,0),vec4(0,0,0,1));
                         mat4 toRLAxis2 = trans2*scale2*mat4(vec4(direction2,0),vec4(tangent2,0),vec4(directionUp2,0),vec4(0,0,0,1));
 
-                        for(int v = (u%2==0?0:tLines.size()); v <= tLines.size() && v >= 0; (u%2==0?v++:v--)){
+                        for(int v = (u%2==0?0:tLines.size()-1); v < tLines.size() && v >= 0; (u%2==0?v++:v--)){
                         // for(int v=0; v<tLines.size(); v++){
                               if(u%2==0){
                                     this->v.push_back(vec3(toRLAxis1*toOri*vec4(tLines[v],1)));
