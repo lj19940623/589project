@@ -16,9 +16,55 @@ class RenderableObj{
       vector<vector<vec3>> savedStackData; // like control points, vertex....
 public:
       bool done = false;
+      bool colored = false;
+      vec3 color;
+      void setColor(vec3 co){
+            colored = true;
+            color = co;
+      }
+      mat4 t = mat4(1);
+      mat4 m = mat4(1);
       int type;
       GLenum primitive; // pri type for rendering
       vector<vec3> v; // mesh verties for rendering
+      vector<vec3> n;
+      vector<vec3> generateNor(){
+            if(v.size()==n.size()){
+                  return n;
+            }else{
+                  if(primitive == GL_TRIANGLES){
+                        for(int i=0; i<v.size()/3; i++){
+                              vec3 nor = normalize(cross(v[3*i+2]-v[3*i+1],v[3*i+2]-v[3*i+0]));
+                              n.push_back(nor);
+                              n.push_back(nor);
+                              n.push_back(nor);
+                        }
+                        if(v.size()!=n.size()) cout << "error in generateNor1\n";
+                        return n;
+                  }else if(primitive == GL_TRIANGLE_STRIP){
+                        vec3 nor;
+                        for(int i=0; i<v.size()-2; i++){
+                              if(i%2==0){
+                                    nor = normalize(cross(v[i+2]-v[i+1],v[i+2]-v[i+0]));
+                              }else{
+                                    nor = normalize(cross(v[i+2]-v[i+1],v[i+2]-v[i+0]))*(-1.0f);
+                              }
+                              n.push_back(nor);
+                        }
+                        n.push_back(nor);
+                        n.push_back(nor);
+                        if(v.size()!=n.size()) cout << "error in generateNor2\n";
+                        return n;
+                  }else{
+                        vec3 nor = normalize(vec3(1,0,0));
+                        for(int i=0; i<v.size(); i++){
+                              n.push_back(nor);
+                        }
+                        if(v.size()!=n.size()) cout << "error in generateNor3\n";
+                        return n;
+                  }
+            }
+      }
       RenderableObj(int objType){ // basic constructor
             type = objType;
             v.clear();
@@ -93,15 +139,20 @@ public:
                                     + savedStackData[4][u]*(1.0f-vv) + savedStackData[5][u]*vv
                                     - (savedStackData[4][0]*(1-uu)*(1-vv) + savedStackData[4][maxIdxUV]*uu*(1-vv)
                                     + savedStackData[5][0]*(1-uu)*vv + savedStackData[5][maxIdxUV]*uu*vv);
-                              this->v.push_back(Quv);
                               u++;
                               uu = (float)u/maxIdxUV;
                               vec3 Qu1v = savedStackData[6][v]*(1.0f-uu) + savedStackData[7][v]*uu
                                     + savedStackData[4][u]*(1.0f-vv) + savedStackData[5][u]*vv
                                     - (savedStackData[4][0]*(1-uu)*(1-vv) + savedStackData[4][maxIdxUV]*uu*(1-vv)
                                     + savedStackData[5][0]*(1-uu)*vv + savedStackData[5][maxIdxUV]*uu*vv);
-                              this->v.push_back(Qu1v);
                               u--;
+                              if(u%2==0){
+                                    this->v.push_back(Quv);
+                                    this->v.push_back(Qu1v);
+                              }else{
+                                    this->v.push_back(Qu1v);
+                                    this->v.push_back(Quv);
+                              }
                         }
                   }
                   stack.pop_back();
@@ -200,9 +251,16 @@ public:
                         mat4 scale2 = scale(mat4(1),vec3(s2,s2,s2));
                         mat4 toRLAxis1 = trans1*scale1*mat4(vec4(direction1,0),vec4(tangent1,0),vec4(directionUp1,0),vec4(0,0,0,1));
                         mat4 toRLAxis2 = trans2*scale2*mat4(vec4(direction2,0),vec4(tangent2,0),vec4(directionUp2,0),vec4(0,0,0,1));
-                        for(int v=0; v<tLines.size(); v++){
-                              this->v.push_back(vec3(toRLAxis1*toOri*vec4(tLines[v],1)));
-                              this->v.push_back(vec3(toRLAxis2*toOri*vec4(tLines[v],1)));
+
+                        for(int v = (u%2==0?0:tLines.size()); v <= tLines.size() && v >= 0; (u%2==0?v++:v--)){
+                        // for(int v=0; v<tLines.size(); v++){
+                              if(u%2==0){
+                                    this->v.push_back(vec3(toRLAxis1*toOri*vec4(tLines[v],1)));
+                                    this->v.push_back(vec3(toRLAxis2*toOri*vec4(tLines[v],1)));
+                              }else{
+                                    this->v.push_back(vec3(toRLAxis2*toOri*vec4(tLines[v],1)));
+                                    this->v.push_back(vec3(toRLAxis1*toOri*vec4(tLines[v],1)));
+                              }
                         }
                   }
                   stack.pop_back();
@@ -264,19 +322,22 @@ public:
                   }
                   BSpline cv(savedStackData[0]);
                   BSpline tu(savedStackData[1]);
+                  tu.setK(6);
                   vector<vec3> tuLines = tu.getLines();
                   vector<vec3> cvLines = cv.getLines();
                   int maxIdxUV = 1.0f/cv.du;
-                  for(int u=0; u<maxIdxUV-1; u++){
+                  for(int u=0; u<maxIdxUV-2; u++){
                         vec3 tangent1 = normalize(tuLines[u+1]-tuLines[u]);
                         vec3 tangent2 = normalize(tuLines[u+2]-tuLines[u+1]);
-                        vec3 nor = normalize(tangent2-tangent1);
-                        vec3 binor1 = cross(tangent1,nor);
-                        vec3 binor2 = cross(tangent2,nor);
+                        vec3 tangent3 = normalize(tuLines[u+3]-tuLines[u+2]);
+                        vec3 nor1 = normalize(tangent2-tangent1);
+                        vec3 nor2 = normalize(tangent3-tangent2);
+                        vec3 binor1 = cross(tangent1,nor1);
+                        vec3 binor2 = cross(tangent2,nor2);
                         mat4 trans1 = translate(mat4(1), tuLines[u]);
                         mat4 trans2 = translate(mat4(1), tuLines[u+1]);
-                        mat4 toCoor1 = trans1*mat4(vec4(binor1,0),vec4(tangent1,0),vec4(nor,0),vec4(0,0,0,1));
-                        mat4 toCoor2 = trans2*mat4(vec4(binor2,0),vec4(tangent2,0),vec4(nor,0),vec4(0,0,0,1));
+                        mat4 toCoor1 = trans1*mat4(vec4(binor1,0),vec4(tangent1,0),vec4(nor1,0),vec4(0,0,0,1));
+                        mat4 toCoor2 = trans2*mat4(vec4(binor2,0),vec4(tangent2,0),vec4(nor2,0),vec4(0,0,0,1));
                         for(int v=0; v<maxIdxUV; v++){
                               this->v.push_back(vec3(toCoor1*vec4(cvLines[v],1)));
                               this->v.push_back(vec3(toCoor2*vec4(cvLines[v],1)));

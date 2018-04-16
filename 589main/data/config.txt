@@ -2,137 +2,223 @@
 # Jian Li
 # script style config file, for testing:
 # Format:
-# T: add vec3 to tempPoints
 # S: add vec3 to tempStack
 # P: push tempStack to stack, else push tempPoints to stack, else do nothing
+# O: change obj type
+# N: make new obj
+# C: set last added obj to some color (r,g,b) in [0,1] scale
+# T xt, yt, zt, xr, yr, zr, xs, ys, zs: translation rotation scaling
+# D duplicate last obj
 #
 #
-# T 0.1 0.2 0.1
-# T 0.2 0.2 0.1
-# T 0.2 0.4 0.2
-# T 0.2 0.2 0.3
-# T 0.0 0.2 0.2
-# T -0.3 0.2 0.6
-# T -0.4 0.2 0.5
-# #
-# P # push tempPoints to stack
-# #
-# # next 4 group of data are used to test bilinear blending surface
-# #
-# S -0.3 0.0 -0.3
-# S -0.2 0.1 -0.3
-# S -0.1 -0.1 -0.3
-# S 0.0 0.2 -0.3
-# S 0.1 -0.1 -0.3
-# S 0.2 0.1 -0.3
-# S 0.3 0.0 -0.3
-# #
-# P # push p0
-# #
-# S -0.3 0.0 0.3
-# S -0.2 0.1 0.3
-# S -0.1 -0.1 0.3
-# S 0.0 0.2 0.3
-# S 0.1 -0.1 0.3
-# S 0.2 0.1 0.3
-# S 0.3 0.0 0.3
-# #
-# P # push p1
-# #
-# S -0.3 0.0 -0.3
-# S -0.3 -0.1 -0.2
-# S -0.3 0.1 -0.1
-# S -0.3 -0.2 0.0
-# S -0.3 0.1 0.1
-# S -0.3 -0.1 0.2
-# S -0.3 0.0 0.3
-# #
-# P # push q0
-# #
-# S 0.3 0.0 -0.3
-# S 0.3 -0.1 -0.2
-# S 0.3 0.1 -0.1
-# S 0.3 -0.2 0.0
-# S 0.3 0.1 0.1
-# S 0.3 -0.1 0.2
-# S 0.3 0.0 0.3
-# #
-# P # push q1
-# #
-# # next 2 group of data are used to test rotational blending surface
-# #
-# S 0.1 -0.3 0.0
-# S 0.25 -0.2 0.0
-# S 0.3 -0.1 0.0
-# S 0.15 0.0 0.0
-# S 0.1 0.1 0.0
-# S 0.15 0.2 0.0
-# S 0.2 0.3 0.0
-# #
-# P # push qr
-# #
-# S -0.1 -0.3 0.2
-# S -0.25 -0.2 0.0
-# S -0.3 -0.1 -0.2
-# S -0.15 0.0 0.0
-# S -0.1 0.1 0.0
-# S -0.15 0.2 0.0
-# S -0.2 0.3 0.0
-# #
-# P # push ql
-# #
-# # next 3 group of data are used to test cross sectional blending surface
-# #
-# S -0.0 0.3 0.0
-# S -0.25 0.2 0.0
-# S -0.3 0.1 0.0
-# S -0.15 0.0 0.0
-# S -0.1 -0.1 0.0
-# S -0.15 -0.2 0.0
-# S -0.2 -0.3 0.0
-# #
-# P # push ql
-# #
-# S 0.0 0.3 0.0
-# S 0.25 0.2 0.0
-# S 0.3 0.1 0.0
-# S 0.15 0.0 0.0
-# S 0.1 -0.1 0.0
-# S 0.15 -0.2 0.0
-# S 0.2 -0.3 0.0
-# #
-# P # push qr
-# #
-# S -0.3 0.0 0.0
-# S -0.25 0.1 0.1
-# S -0.2 0.2 0.1
-# S -0.0 0.25 0.2
-# S 0.2 0.2 0.1
-# S 0.25 0.1 0.1
-# S 0.3 0.1 0.0
-# #
-# P # push cross section curve
-# #
+# GROUND:
 #
-# next 2 group of data are used to test sweep surface
+# next 4 group of data are used to test bilinear blending surface
 #
-S -0.2 0.3 0.0
-S -0.1 0.2 0.3
-S -0.0 0.1 0.1
+S -0.3 0.0 -0.3
+S -0.2 0.1 -0.3
+S -0.1 -0.1 -0.3
+S 0.0 0.2 -0.3
+S 0.1 -0.1 -0.3
+S 0.2 0.1 -0.3
+S 0.3 0.0 -0.3
+#
+P # push p0
+#
+S -0.3 0.0 0.3
+S -0.2 0.1 0.3
+S -0.1 -0.1 0.3
+S 0.0 0.2 0.3
+S 0.1 -0.1 0.3
+S 0.2 0.1 0.3
+S 0.3 0.0 0.3
+#
+P # push p1
+#
+S -0.3 0.0 -0.3
+S -0.3 -0.1 -0.2
+S -0.3 0.1 -0.1
+S -0.3 -0.2 0.0
+S -0.3 0.1 0.1
+S -0.3 -0.1 0.2
+S -0.3 0.0 0.3
+#
+P # push q0
+#
+S 0.3 0.0 -0.3
+S 0.3 -0.1 -0.2
+S 0.3 0.1 -0.1
+S 0.3 -0.2 0.0
+S 0.3 0.1 0.1
+S 0.3 -0.1 0.2
+S 0.3 0.0 0.3
+#
+P # push q1
+#
+O3
+N
+C 0.8 0.6 0
+T 0 0 0 0 0 0 5 1 5
+#
+#
+# TREE trunk:
+#
+# next 2 group of data are used to test rotational blending surface
+#
+S 0.2 -0.3 0.0
+S 0.2 -0.25 0.0
+S 0.2 -0.2 0.0
+S 0.2 -0.2 0.0
+S 0.2 -0.15 0.0
+S 0.2 -0.1 0.0
 S 0.15 0.0 0.0
-S -0.0 -0.1 -0.2
-S -0.15 -0.2 -0.3
-S -0.2 -0.3 -0.1
+S 0.15 0.1 0.0
+S 0.15 0.25 0.0
+S 0.1 0.3 0.0
 #
-P # push cv
+P # push qr
+#
+S -0.2 -0.3 0.0
+S -0.2 -0.25 0.0
+S -0.2 -0.2 0.0
+S -0.2 -0.2 0.0
+S -0.2 -0.15 0.0
+S -0.2 -0.1 0.0
+S -0.15 0.0 0.0
+S -0.15 0.1 0.0
+S -0.15 0.25 0.0
+S -0.1 0.3 0.0
+#
+P # push ql
+#
+O4
+N
+C 0.35 0.31 0.23
+T 0 0.09 0 0 0 0 0.1 0.3 0.1
+#
+D # duplicate last obj
+C 0.35 0.31 0.23
+T 0 0.18 0.03 1 0 0 0.03 0.1 0.03 # trans * rotate * scale
+D # duplicate last obj
+C 0.35 0.31 0.23
+T 0 0.18 -0.03 1 3.14 0 0.03 0.1 0.03 # trans * rotate * scale
+#
+D # duplicate last obj
+C 0.35 0.31 0.23
+T 0.02 0.15 0 0.5 1 0 0.03 0.1 0.03 # trans * rotate * scale
+#
+D # duplicate last obj
+C 0.35 0.31 0.23
+T -0.03 0.15 0 0 0 1 0.03 0.1 0.03 # trans * rotate * scale
+#
+# LEAF:
+# next 3 group of data are used to test cross sectional blending surface
+#
+S -0.0 0.3 0.0
+S -0.25 0.2 0.0
+S -0.3 0.1 0.0
+S -0.1 0.0 0.0
+S -0.05 -0.1 0.0
+S -0.05 -0.2 0.0
+S -0.05 -0.3 0.0
+#
+P # push ql
 #
 S 0.0 0.3 0.0
 S 0.25 0.2 0.0
 S 0.3 0.1 0.0
-S 0.15 0.0 0.0
-S 0.1 -0.1 0.0
-S 0.15 -0.2 0.0
-S 0.2 -0.3 0.0
+S 0.1 0.0 0.0
+S 0.05 -0.1 0.0
+S 0.05 -0.2 0.0
+S 0.05 -0.3 0.0
 #
-P # push tu
+P # push qr
 #
+S -0.3 0.0 0.0
+S -0.25 0.15 0.1
+S -0.2 0.0 0.1
+S -0.1 -0.1 0.1
+S -0.0 0.05 0.2
+S 0.1 -0.1 0.1
+S 0.2 0.0 0.1
+S 0.25 0.15 0.1
+S 0.3 0.0 0.0
+#
+P # push cross section curve
+# #
+O5 ## change to type 5 cross sectional surface
+N ## new obj
+C 0.2 0.8 0.2
+T 0 0 0 0 0 0 0.5 1 0.5 # trans * rotate * scale
+#
+# next n group of data are used to test cloud (rainbow)
+#
+S -0.5 0 0
+S -0.4 0.18 0
+S -0.3 0.25 0
+S -0.2 0.33 0
+S -0.1 0.4 0
+S 0 0.41 0
+S 0.1 0.4 0
+S 0.2 0.33 0
+S 0.3 0.25 0
+S 0.4 0.18 0
+S 0.5 0 0
+P # push cross section curve
+# #
+O6 ## change to type 6 cloud
+N ## new obj
+C 0.6 0.0 0.6
+T 0 0 0 0 0 0 2 2 1 # trans * rotate * scale
+D
+C 0.0 0.0 0.6
+T 0 0 0 0 0 0 2.25 2.25 1 # trans * rotate * scale
+D
+C 0.0 0.6 0.0
+T 0 0 0 0 0 0 2.5 2.5 1 # trans * rotate * scale
+D
+C 0.6 0.6 0.0
+T 0 0 0 0 0 0 2.75 2.75 1 # trans * rotate * scale
+D
+C 1 0.8 0.2
+T 0 0 0 0 0 0 3 3 1 # trans * rotate * scale
+D
+C 1 0.0 0.0
+T 0 0 0 0 0 0 3.25 3.25 1 # trans * rotate * scale
+#
+#
+#
+# next 2 group of data are used to test sweep surface
+#
+# S 0.2 0.0 0.2
+# S 0.1 0.0 0.1
+# S 0.0 0.0 0.1
+# S -0.1 0.0 0.1
+# S -0.2 0.0 0.2
+# S -0.1 0.0 0.0
+# S -0.2 0.0 -0.1
+# S -0.1 0.0 -0.25
+# S -0.0 0.0 -0.15
+# S 0.1 0.0 -0.25
+# S 0.2 0.0 -0.1
+# S 0.1 0.0 0.0
+# S 0.2 0.0 0.2
+# S 0.1 0.0 0.1
+# #
+# P # push cv
+# #
+# S 0.25 1.3 0.0
+# S 0.24 0.9 0.0
+# S 0.22 0.5 0.0
+# S 0.2 0.3 0.0
+# S 0.18 0.0 0.0
+# S 0.15 -0.2 0.0
+# S 0.14 -0.6 0.0
+# S 0.13 -0.7 0.0
+# S 0.12 -0.8 0.0
+# S 0.11 -0.9 0.0
+# #
+# P # push tu
+# #
+# O7 # change type to sweep surface
+# N # make new obj

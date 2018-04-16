@@ -18,15 +18,21 @@ using namespace std;
 #include <chrono>
 using namespace std::chrono;
 
-// Include GLFW
+#ifdef MACOS
 #define GLFW_INCLUDE_GLCOREARB
-// #define GL_GLEXT_PROTOTYPES
 #include <GLFW/glfw3.h>
+#else
+#define GLFW_INCLUDE_GLCOREARB
+#define GL_GLEXT_PROTOTYPES
+#include <GLFW/glfw3.h>
+#endif
+
 
 // Include GLM
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/ext.hpp"
 using namespace glm;

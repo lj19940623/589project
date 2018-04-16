@@ -21,7 +21,7 @@ LIBS=`pkg-config --libs glfw3 gl`
 CC=clang++		# or nvcc, or clang++
 
 # DEBUG=-ggdb -Og	# (make debugging easier)
-DEBUG=-O2 		# (make execution faster)
+DEBUG=-O2 -lpthread 		# (make execution faster)
 DEBUG_CMDLINE=
 
 # PROFILE=-pg -fprofile-arcs -ftest-coverage
@@ -45,7 +45,7 @@ DEPS=$(OBJECTS:.o=.d)
 PROFS=$(OBJECTS:.o=.gcda) $(OBJECTS:.o=.gcno)
 
 LDFLAGS=$(DEBUG) $(PROFILE) $(LIBS) $(LIBDIRS)
-CFLAGS=$(DEBUG) $(PROFILE) -c -std=c++11 $(LIBDIRS) $(INCLUDES) -MMD -Wall -pipe
+CFLAGS=$(DEBUG) $(PROFILE) -c -std=c++11 $(LIBDIRS) $(INCLUDES) -MMD -Wall -pipe -DGLM_ENABLE_EXPERIMENTAL
 EXECUTABLE=$(BINDIR)/$(EXEC)
 
 all:	$(EXECUTABLE)

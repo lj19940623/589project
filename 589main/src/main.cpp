@@ -61,6 +61,7 @@ bool SaveToStack = false;
 int TabToToggleObjType = 0;
 bool makeNewObj = false;
 bool readFile = false;
+bool clearObjList = false;
 
 //------------------
 // function shortcut
@@ -121,7 +122,8 @@ int main(int argc, char *argv[]){
 	// // v p: world to camera and camera to perspective, apply to all objs
 	GLint v44 = glGetUniformLocation(program.id, "v");
 	GLint p44 = glGetUniformLocation(program.id, "p");
-	GLint colorId = glGetUniformLocation(program.id, "lightColor");
+	GLint colorId = glGetUniformLocation(program.id, "objColor");
+	GLint lightPosId= glGetUniformLocation(program.id, "lightPos");
 
 	Server sv(2225);
 	sv.start();
@@ -129,14 +131,17 @@ int main(int argc, char *argv[]){
 	RenderableObj xaxis(1);
 	xaxis.v.push_back(vec3(1,0,0));
 	xaxis.v.push_back(vec3(0,0,0));
+	xaxis.setColor(vec3(1,0,0));
 	objList.push_back(xaxis);
 	RenderableObj yaxis(1);
 	yaxis.v.push_back(vec3(0,1,0));
 	yaxis.v.push_back(vec3(0,0,0));
+	yaxis.setColor(vec3(0,1,0));
 	objList.push_back(yaxis);
 	RenderableObj zaxis(1);
 	zaxis.v.push_back(vec3(0,0,1));
 	zaxis.v.push_back(vec3(0,0,0));
+	zaxis.setColor(vec3(0,0,1));
 	objList.push_back(zaxis);
 
 	cout << "start of while loop rendering"<<endl;
@@ -145,6 +150,15 @@ int main(int argc, char *argv[]){
 			string file( "./data/config.txt" );
 			loadFile(file);
 			readFile = false;
+		}
+		if(clearObjList){
+			clearObjList = false;
+			tempPoints.clear();
+			stack.clear();
+			objList.clear();
+			objList.push_back(xaxis);
+			objList.push_back(yaxis);
+			objList.push_back(zaxis);
 		}
 
 		// getterMod == 0 => single point mode
@@ -184,13 +198,6 @@ int main(int argc, char *argv[]){
 			makeNewObj = false;
 			RenderableObj tempObj(TabToToggleObjType, stack);
 			if(tempObj.done) objList.push_back(tempObj);
-			// if(TabToToggleObjType==0 && stack.size()>=1){
-			// 	cout << "make new line segment(t=0) objs\n";
-			// 	RenderableObj tempObj(GL_LINE_STRIP, vec3(0.2, 0.8, 0.1), stack.back());
-			// 	objList.push_back(tempObj);
-			// 	stack.pop_back();
-			// }
-			// if()
 		}
 		glUseProgram(program.id);
 		// get window size and reset viewport
@@ -214,12 +221,15 @@ int main(int argc, char *argv[]){
 		p = perspective(radians(fovy), aspect, zNear, zFar);
 		glUniformMatrix4fv(p44, 1, GL_FALSE, value_ptr(p));
 
+		glUniform3f(lightPosId, 5.0, 5.0, 5.0);
 		//
 		CheckGLErrors();
 
 		// clear
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		CheckGLErrors();
 
 		// rendering
@@ -250,13 +260,23 @@ int main(int argc, char *argv[]){
 		if(tempPoints.size()>0) stack.pop_back(); // pop tempPoints
 		// renderable Objs
 		for(int i = 0; i<objList.size(); i++){
-			colorCur[0] = ((i+tempStackSize)%colorStage)*colorDelta;	// TODO: validate color of objs
-			colorCur[1] = ((i+tempStackSize)/colorStage%colorStage)*colorDelta;
-			colorCur[2] = ((i+tempStackSize)/colorStage/colorStage%colorStage)*colorDelta;
-	            VertexArray temp(objList[i].v.size());
-	            temp.addBuffer("temp",0,objList[i].v);
-			// glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
-			glUniform3f(colorId, colorCur.x, colorCur.y, colorCur.z);
+			// transformation
+			glUniformMatrix4fv(t44, 1, GL_FALSE, value_ptr(objList[i].t));
+			glUniformMatrix4fv(m44, 1, GL_FALSE, value_ptr(objList[i].m));
+			// color
+			if(objList[i].colored){
+				glUniform3f(colorId, objList[i].color.x, objList[i].color.y, objList[i].color.z);
+			}else{ // give a color
+				colorCur[0] = ((i+tempStackSize)%colorStage)*colorDelta;	// TODO: validate color of objs
+				colorCur[1] = ((i+tempStackSize)/colorStage%colorStage)*colorDelta;
+				colorCur[2] = ((i+tempStackSize)/colorStage/colorStage%colorStage)*colorDelta;
+				glUniform3f(colorId, colorCur.x, colorCur.y, colorCur.z);
+			}
+			// prepare vertex
+			VertexArray temp(objList[i].v.size());
+	            temp.addBuffer("tempV",0,objList[i].v);
+	            temp.addBuffer("tempN",1,objList[i].generateNor());
+			// prepare normal for shading
 			render(objList[i].primitive, program, temp);
 		}
 		CheckGLErrors();
@@ -374,15 +394,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 	if (key == GLFW_KEY_N && action == GLFW_PRESS) makeNewObj = true;
 	if (key == GLFW_KEY_F && action == GLFW_PRESS) readFile = true;
+	if (key == GLFW_KEY_Z && action == GLFW_PRESS) clearObjList = true;
 	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
 		camera_distance = 1.0f;
 		anglleftright = 0.8;
 		angleupdown = 0.5;
 	}
-	if (key == GLFW_KEY_UP && action == GLFW_RELEASE) angleupdown += 0.05;
-	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE) angleupdown -= 0.05;
-	if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) anglleftright += 0.05;
-	if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) anglleftright -= 0.05;
+	if (key == GLFW_KEY_UP && (action == GLFW_PRESS || action == GLFW_REPEAT)) angleupdown += 0.05;
+	if (key == GLFW_KEY_DOWN && (action == GLFW_PRESS || action == GLFW_REPEAT)) angleupdown -= 0.05;
+	if (key == GLFW_KEY_LEFT && (action == GLFW_PRESS || action == GLFW_REPEAT)) anglleftright += 0.05;
+	if (key == GLFW_KEY_RIGHT && (action == GLFW_PRESS || action == GLFW_REPEAT)) anglleftright -= 0.05;
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 	// control
@@ -443,13 +464,13 @@ void loadFile( std::string const & f) {
 		else if ( commentPos != string::npos ) buffer = buffer.substr( 0, commentPos ); // cut after
 		else if ( buffer.size() < 1 ) break; // end of Read
 		switch (buffer.at(0)) {
-			case 'T':{
-				float x1,y1,z1;
-				istringstream ss(buffer.substr(2));
-				ss >> x1 >> y1 >> z1;
-				tempPoints.push_back(vec3(x1,y1,z1));
-				break;
-			}
+			// case 'T':{
+			// 	float x1,y1,z1;
+			// 	istringstream ss(buffer.substr(2));
+			// 	ss >> x1 >> y1 >> z1;
+			// 	tempPoints.push_back(vec3(x1,y1,z1));
+			// 	break;
+			// }
 			case 'S':{
 				float x1,y1,z1;
 				istringstream ss(buffer.substr(2));
@@ -465,6 +486,36 @@ void loadFile( std::string const & f) {
 					stack.push_back(tempPoints);
 					tempPoints.clear();
 				}
+				break;
+			}
+			case 'O':{
+				istringstream ss(buffer.substr(1));
+				ss >> TabToToggleObjType;
+				break;
+			}
+			case 'N':{
+				RenderableObj tempObj(TabToToggleObjType, stack);
+				if(tempObj.done) objList.push_back(tempObj);
+				break;
+			}
+			case 'C':{
+				float r,g,b;
+				istringstream ss(buffer.substr(2));
+				ss >> r >> g >> b;
+				objList.back().setColor(vec3(r,g,b));
+				break;
+			}
+			case 'T':{
+				float xt, yt, zt, xr, yr, zr, xs, ys, zs;
+				istringstream ss(buffer.substr(2));
+				ss >> xt >> yt >> zt >> xr >> yr >> zr >> xs >> ys >> zs;
+				objList.back().m = translate(mat4(1), vec3(xt,yt,zt))
+				* rotate(mat4(1), zr, vec3(0,0,1)) *rotate(mat4(1), yr, vec3(0,1,0))
+				* rotate(mat4(1), xr, vec3(1,0,0)) * scale(mat4(1), vec3(xs,ys,zs));
+				break;
+			}
+			case 'D':{
+				objList.push_back(objList.back());
 				break;
 			}
 		}

@@ -48,7 +48,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         var writeStream: Unmanaged<CFWriteStream>?
         
         CFStreamCreatePairWithSocketToHost(kCFAllocatorDefault,
-                                           "10.13.98.107" as CFString,
+                                           "10.13.108.191" as CFString,
                                            2225,
                                            &readStream,
                                            &writeStream)
@@ -75,7 +75,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         var y = 0
         var i = 0
         while (i < 1080*1920){
-            if ui8array[i*4]<UInt8(40) && ui8array[i*4+1]<UInt8(40) && ui8array[i*4+2]>UInt8(130) {
+            if ui8array[i*4]<UInt8(40) && ui8array[i*4+1]<UInt8(40) && ui8array[i*4+2]>UInt8(100) {
                 x = i % 1920
                 y = i / 1920
                 break
