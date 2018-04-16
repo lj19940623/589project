@@ -13,9 +13,9 @@
 // attribute
 //------------------
 // window
-GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
-int windowWidth = 500;
-int windowHeight = 500;
+GLFWwindow* window;
+int windowWidth = 800;
+int windowHeight = 800;
 // camera atrr
 // lookAt
 vec3 eye = vec3(0,0,1);

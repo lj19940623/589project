@@ -1,13 +1,10 @@
 # 589project
 
-This project should be able to:
-      refer to proposal
-
-Env: MacOS 10.12.6 // /fedora
+Env: MacOS 10.12.6 / fedora
 
 Instructions:
       To run:
-            make run // / make -f fedoraMakefile run
+            make run / make -f fedoraMakefile run
             ios side app launch
 
       Camera Controls:
@@ -27,16 +24,13 @@ Based on:
       makefile, VertexArray.cpp and Program.cpp are adapted from Boilerplate code.
 Demo:
 
-
 Log:
-
-point detection on ios side finished
-communication: ios stream and c++ server: finished with multithread and mutex.
-iPhone 7 Plus Back Telephoto Camera has FOV at about 60 degree. https://developer.apple.com/library/content/documentation/DeviceInformation/Reference/iOSDeviceCompatibility/Cameras/Cameras.html
-frame: process design(tempPoints->stack->objs), pointGetter design(single, continues), realtime frames.
-tool kit(renderableObj):
-      add: curve(line seg, Bspline),  surface(bilinear blending, rotational blending, cross sectional blending, sweep surface), other(point, spray)
-      selecting and pasting
-      union, intersection and difference
-Testing and demo scene
-      readFile for testing
+      point detection on ios side finished
+      communication: ios stream and c++ server: finished with multithread and mutex.
+      frame: process design(tempPoints->stack->objs), pointGetter design(single, continues), realtime frames.
+      tool kit(renderableObj):
+            add: curve(line seg, Bspline),  surface(bilinear blending, rotational blending, cross sectional blending, sweep surface), other(point, spray)
+            selecting and pasting
+      Testing and demo scene
+            readFile for testing
+            shading
